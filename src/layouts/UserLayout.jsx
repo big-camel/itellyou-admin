@@ -1,12 +1,12 @@
+import React from 'react';
 import { DefaultFooter, getMenuData, getPageTitle } from '@ant-design/pro-layout';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
-import { Link, useIntl, connect } from 'umi';
-import React from 'react';
-import SelectLang from '@/components/SelectLang';
+import { Link, useIntl, useSelector } from 'umi';
 import logo from '../assets/logo.svg';
+import logoFull from '../assets/logo-full.svg';
 import styles from './UserLayout.less';
 
-const UserLayout = props => {
+const UserLayout = (props) => {
   const {
     route = {
       routes: [],
@@ -21,10 +21,14 @@ const UserLayout = props => {
   } = props;
   const { formatMessage } = useIntl();
   const { breadcrumb } = getMenuData(routes);
+
+  const setings = useSelector((state) => state.settings);
   const title = getPageTitle({
     pathname: location.pathname,
     formatMessage,
     breadcrumb,
+    title: setings.title,
+    menu: setings.menu,
     ...props,
   });
   return (
@@ -35,25 +39,30 @@ const UserLayout = props => {
       </Helmet>
 
       <div className={styles.container}>
-        <div className={styles.lang}>
-          <SelectLang />
-        </div>
         <div className={styles.content}>
           <div className={styles.top}>
             <div className={styles.header}>
               <Link to="/">
                 <img alt="logo" className={styles.logo} src={logo} />
-                <span className={styles.title}>Ant Design</span>
               </Link>
             </div>
-            <div className={styles.desc}>Ant Design 是西湖区最具影响力的 Web 设计规范</div>
           </div>
           {children}
         </div>
-        <DefaultFooter />
+        <DefaultFooter
+          links={[
+            {
+              key: 'itellyou',
+              title: <img height={24} src={logoFull} alt="ITELLYOU" />,
+              href: 'https://www.itellyou.com',
+              blankTarget: true,
+            },
+          ]}
+          copyright="2020 四川西维尔科技有限公司"
+        />
       </div>
     </HelmetProvider>
   );
 };
 
-export default connect(({ settings }) => ({ ...settings }))(UserLayout);
+export default UserLayout;

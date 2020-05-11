@@ -1,45 +1,47 @@
-import { queryCurrent, query as queryUsers } from '@/services/user';
+import { history } from 'umi';
+import { stringify } from 'qs';
+import { fetchMe, logout } from '@/services/user';
+import { getPageQuery } from '@/utils/utils';
 
 const UserModel = {
   namespace: 'user',
   state: {
-    currentUser: {},
+    ...window.appData.user,
   },
   effects: {
-    *fetch(_, { call, put }) {
-      const response = yield call(queryUsers);
-      yield put({
-        type: 'save',
-        payload: response,
-      });
+    *fetchMe({ payload }, { call, put }) {
+      const response = yield call(fetchMe, payload);
+      if (response && response.result) {
+        yield put({
+          type: 'setMe',
+          payload: response.data,
+        });
+      }
+      return response;
     },
-
-    *fetchCurrent(_, { call, put }) {
-      const response = yield call(queryCurrent);
+    *logout(_, { call, put }) {
+      const response = yield call(logout);
       yield put({
-        type: 'saveCurrentUser',
-        payload: response,
+        type: 'setMe',
+        payload: null,
       });
+      const { redirect } = getPageQuery();
+      if (window.location.pathname !== '/login' && !redirect) {
+        history.replace({
+          pathname: '/login',
+          search: stringify({
+            redirect: window.location.href,
+          }),
+        });
+      }
+      return response;
     },
   },
   reducers: {
-    saveCurrentUser(state, action) {
-      return { ...state, currentUser: action.payload || {} };
-    },
-
-    changeNotifyCount(
-      state = {
-        currentUser: {},
-      },
-      action,
-    ) {
+    setMe(state, { payload }) {
       return {
         ...state,
-        currentUser: {
-          ...state.currentUser,
-          notifyCount: action.payload.totalCount,
-          unreadCount: action.payload.unreadCount,
-        },
+        me: payload ? { ...(state || {}).me, ...payload } : null,
       };
     },
   },

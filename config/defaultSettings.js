@@ -1,7 +1,6 @@
 export default {
-  navTheme: 'dark',
-  // 拂晓蓝
-  primaryColor: '#1890ff',
+  navTheme: 'light',
+  primaryColor: '#347EFF',
   layout: 'sidemenu',
   contentWidth: 'Fluid',
   fixedHeader: false,
@@ -11,7 +10,7 @@ export default {
   menu: {
     locale: true,
   },
-  title: 'Ant Design Pro',
+  title: 'ITELLYOU ADMIN',
   pwa: false,
   iconfontUrl: '',
 };

@@ -4,6 +4,8 @@
  */
 import { extend } from 'umi-request';
 import { notification } from 'antd';
+import { history } from 'umi';
+import pathToRegexp from 'path-to-regexp';
 
 const codeMessage = {
   200: '服务器成功返回请求的数据。',
@@ -26,16 +28,26 @@ const codeMessage = {
  * 异常处理程序
  */
 
-const errorHandler = error => {
+const errorHandler = (error) => {
   const { response } = error;
 
   if (response && response.status) {
     const errorText = codeMessage[response.status] || response.statusText;
     const { status, url } = response;
-    notification.error({
-      message: `请求错误 ${status}: ${url}`,
-      description: errorText,
-    });
+    if (
+      !pathToRegexp('/user/me').test(url) &&
+      !pathToRegexp('^/[login|regiser|401|403|404|5d{2}]').test(history.location.pathname)
+    ) {
+      let toUrl = status;
+      if (status === 401) toUrl = 'login';
+      else if (status >= 500) toUrl = 500;
+      history.push(`/${toUrl}`);
+    } else {
+      notification.error({
+        message: `请求错误 ${status}: ${url}`,
+        description: errorText,
+      });
+    }
   } else if (!response) {
     notification.error({
       description: '您的网络发生异常，无法连接服务器',

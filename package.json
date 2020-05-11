@@ -1,5 +1,5 @@
 {
-  "name": "ant-design-pro",
+  "name": "itellyou-admin",
   "version": "1.0.0",
   "private": true,
   "description": "An out-of-box UI solution for enterprise applications",
@@ -32,14 +32,26 @@
     "test:component": "umi test ./src/components",
     "tsc": "tsc"
   },
-  "husky": { "hooks": { "pre-commit": "npm run lint-staged" } },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npm run lint-staged"
+    }
+  },
   "lint-staged": {
     "**/*.less": "stylelint --syntax less",
     "**/*.{js,jsx,ts,tsx}": "npm run lint-staged:js",
-    "**/*.{js,jsx,tsx,ts,less,md,json}": ["prettier --write"]
+    "**/*.{js,jsx,tsx,ts,less,md,json}": [
+      "prettier --write"
+    ]
   },
-  "browserslist": ["> 1%", "last 2 versions", "not ie <= 10"],
-  "resolutions": { "moment": "2.24.0" },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not ie <= 10"
+  ],
+  "resolutions": {
+    "moment": "2.24.0"
+  },
   "dependencies": {
     "@ant-design/icons": "^4.0.0",
     "@ant-design/pro-layout": "^5.0.8",
@@ -92,7 +104,9 @@
     "puppeteer-core": "^3.0.0",
     "stylelint": "^13.0.0"
   },
-  "engines": { "node": ">=10.0.0" },
+  "engines": {
+    "node": ">=10.0.0"
+  },
   "checkFiles": [
     "src/**/*.js*",
     "src/**/*.ts*",
