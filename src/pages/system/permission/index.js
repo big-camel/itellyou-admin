@@ -144,7 +144,7 @@ export default () => {
         search={{ span: 4 }}
         request={({ current, pageSize, created_time, ...params }) => {
           return new Promise((resolve, reject) => {
-            const [begin, end] = created_time;
+            const [begin, end] = created_time || [];
 
             list({
               offset: (current - 1) * pageSize,
