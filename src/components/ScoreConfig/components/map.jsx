@@ -24,6 +24,7 @@ export default {
         <Option value="withdraw">提现</Option>
         <Option value="bind">绑定</Option>
         <Option value="unbind">取消绑定</Option>
+        <Option value="reward">打赏</Option>
       </Select>
     ),
     rules: [
