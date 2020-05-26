@@ -3,7 +3,7 @@ import { Modal } from 'antd';
 import Form from '@/components/Form';
 import formMap from './map';
 
-const { Name, Description, Disabled } = Form.createItem(formMap);
+const { Text, Link, Target } = Form.createItem(formMap);
 
 const formLayout = {
   labelCol: {
@@ -14,15 +14,10 @@ const formLayout = {
   },
 };
 
-const UpdateForm = ({ values, modalVisible, onCancel, ...props }) => {
+export default ({ values, modalVisible, onCancel, ...props }) => {
   const [form] = Form.useForm();
-  const { id, name, disabled, description } = values || {};
-  const [formVals] = useState({
-    name,
-    disabled,
-    description,
-    id,
-  });
+
+  const [formVals] = useState({});
 
   const onSubmit = async () => {
     const fieldsValue = await form.validateFields();
@@ -33,14 +28,15 @@ const UpdateForm = ({ values, modalVisible, onCancel, ...props }) => {
           update[p] = fieldsValue[p];
         }
       });
-      props.onSubmit({ id, ...update });
+      props.onSubmit(update);
     }
   };
+
   return (
     <Modal
       width={640}
       destroyOnClose
-      title="修改角色"
+      title="新增链接"
       visible={modalVisible}
       onCancel={onCancel}
       onOk={onSubmit}
@@ -49,18 +45,14 @@ const UpdateForm = ({ values, modalVisible, onCancel, ...props }) => {
         {...formLayout}
         form={form}
         initialValues={{
-          name: formVals.name,
-          disabled: formVals.disabled,
-          description: formVals.description,
+          target: '_blank',
         }}
         {...props.form}
       >
-        <Name name="name" />
-        <Disabled name="disabled" />
-        <Description name="description" />
+        <Text name="text" />
+        <Link name="link" />
+        <Target name="target" />
       </Form>
     </Modal>
   );
 };
-
-export default UpdateForm;

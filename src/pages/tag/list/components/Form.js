@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import { Modal } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Modal, Select } from 'antd';
 import Form from '@/components/Form';
+import { list } from '@/services/tag/group';
 import formMap from './map';
-import { queryName } from '../service';
+import { query } from '../service';
 
-const { Name, Score } = Form.createItem(formMap);
+const { Name, Disabled, Group } = Form.createItem(formMap);
 
 const formLayout = {
   labelCol: {
@@ -18,13 +19,27 @@ const formLayout = {
 export default ({ values, modalVisible, onCancel, ...props }) => {
   const [form] = Form.useForm();
 
-  const { id, name, min_score, max_score } = values || {};
+  const { id, name, disabled, group } = values || {};
+
   const [formVals] = useState({
     id,
     name,
-    min_score,
-    max_score,
+    disabled,
+    group_id: group ? group.id : 0,
   });
+
+  const [groupData, setGroupData] = useState([]);
+
+  useEffect(() => {
+    list({
+      offset: 0,
+      limit: 10000,
+    }).then(({ result, data }) => {
+      if (result) {
+        setGroupData(data.data);
+      }
+    });
+  }, [list, form]);
 
   const onSubmit = async () => {
     const fieldsValue = await form.validateFields();
@@ -48,7 +63,7 @@ export default ({ values, modalVisible, onCancel, ...props }) => {
     <Modal
       width={640}
       destroyOnClose
-      title="修改等级"
+      title="修改标签"
       visible={modalVisible}
       onCancel={onCancel}
       onOk={onSubmit}
@@ -58,17 +73,16 @@ export default ({ values, modalVisible, onCancel, ...props }) => {
         form={form}
         initialValues={{
           name: formVals.name,
-          min_score: formVals.min_score,
-          max_score: formVals.max_score,
+          disabled: formVals.disabled,
+          group_id: formVals.group_id,
         }}
         {...props.form}
       >
         <Name
           name="name"
           asyncValidator={(_, value) => {
-            if (!id && value === name) return Promise.resolve();
             return new Promise((resolve, reject) => {
-              queryName({ name: value })
+              query({ name: value })
                 .then(({ result }) => {
                   if (result) resolve();
                   else reject(new Error('名称已存在'));
@@ -77,8 +91,15 @@ export default ({ values, modalVisible, onCancel, ...props }) => {
             });
           }}
         />
-        <Score label="最小分数" name="min_score" />
-        <Score label="最大分数" name="max_score" />
+        <Disabled name="disabled" />
+        <Group name="group_id">
+          <Select.Option value={0}>未选择</Select.Option>
+          {groupData.map((item) => (
+            <Select.Option key={item.id} value={item.id}>
+              {item.name}
+            </Select.Option>
+          ))}
+        </Group>
       </Form>
     </Modal>
   );

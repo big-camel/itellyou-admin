@@ -1,7 +1,9 @@
-import request from 'umi-request';
+import request from '@/utils/request';
 
-export async function list() {
-  return request('/api/bank/config/credit');
+export async function list(params) {
+  return request('/api/bank/config/credit', {
+    params,
+  });
 }
 
 export async function update(params) {

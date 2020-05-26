@@ -58,6 +58,23 @@ export default [
         ],
       },
       {
+        name: 'tag.manager',
+        icon: 'tag',
+        path: '/tag',
+        routes: [
+          {
+            path: 'list',
+            name: 'list',
+            component: './tag/list',
+          },
+          {
+            path: 'group',
+            name: 'group',
+            component: './tag/group',
+          },
+        ],
+      },
+      {
         name: 'system',
         icon: 'robot',
         path: '/system',
@@ -73,6 +90,17 @@ export default [
             name: 'role',
             access: 'adminSystemRoleList',
             component: './system/role',
+          },
+          {
+            path: 'setting',
+            name: 'setting',
+            access: 'adminSysSettingEdit',
+            component: './system/setting',
+          },
+          {
+            path: 'link',
+            name: 'link',
+            component: './system/link',
           },
         ],
       },

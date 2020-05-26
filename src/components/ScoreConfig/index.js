@@ -16,6 +16,7 @@ export default ({ type, list, update }) => {
       title: '操作',
       dataIndex: 'action',
       formItemProps: { autoComplete: 'off' },
+      hideInSearch: true,
       valueEnum: {
         follow: '关注/收藏',
         like: '点赞',
@@ -34,12 +35,14 @@ export default ({ type, list, update }) => {
         withdraw: '提现',
         bind: '绑定',
         unbind: '取消绑定',
+        reward: '打赏',
       },
     },
     {
       title: '类型',
       dataIndex: 'type',
       formItemProps: { autoComplete: 'off' },
+      hideInSearch: true,
       valueEnum: {
         user: '用户',
         question: '问题',
@@ -98,6 +101,7 @@ export default ({ type, list, update }) => {
         </Tooltip>
       ),
       dataIndex: 'creater_min_score',
+      hideInSearch: true,
       formItemProps: { autoComplete: 'off' },
     },
     {
@@ -245,10 +249,12 @@ export default ({ type, list, update }) => {
     {
       title: '目标说明',
       dataIndex: 'targeter_remark',
+      hideInSearch: true,
       formItemProps: { autoComplete: 'off' },
     },
     {
       title: '操作说明',
+      hideInSearch: true,
       dataIndex: 'creater_remark',
       formItemProps: { autoComplete: 'off' },
     },
@@ -262,6 +268,7 @@ export default ({ type, list, update }) => {
         </Tooltip>
       ),
       dataIndex: 'only_once',
+      hideInSearch: true,
       valueEnum: {
         true: { text: '是', status: 'Processing' },
         false: { text: '否', status: 'Default' },
@@ -333,9 +340,9 @@ export default ({ type, list, update }) => {
         }}
         toolBarRender={() => []}
         tableAlertRender={false}
-        request={() =>
+        request={(params) =>
           new Promise((resolve, reject) => {
-            list().then(({ result, data }) => {
+            list(params).then(({ result, data }) => {
               if (!result || !data) reject();
               else
                 resolve({
