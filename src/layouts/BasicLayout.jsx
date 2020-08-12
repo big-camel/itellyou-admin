@@ -13,11 +13,11 @@ import BlankLayout from './BlankLayout';
 
 const defaultFooterDom = (
   <DefaultFooter
-    copyright="2020 四川西维尔儿科技有限公司"
+    copyright="2020 四川西维尔科技有限公司"
     links={[
       {
         key: 'itellyou',
-        title: <img height={24} src={logoFull} alt="四川西维尔儿科技有限公司" />,
+        title: <img height={24} src={logoFull} alt="四川西维尔科技有限公司" />,
         href: 'https://www.itellyou.com',
         blankTarget: true,
       },

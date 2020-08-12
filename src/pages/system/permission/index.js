@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useAccess } from 'umi';
 import { Button, Tooltip, message, Space, Modal } from 'antd';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
+import { PageContainer } from '@ant-design/pro-layout';
 import { PlusOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import ProTable from '@ant-design/pro-table';
 import CreateForm from './components/CreateForm';
@@ -135,7 +135,7 @@ export default () => {
   }
 
   return (
-    <PageHeaderWrapper title={false}>
+    <PageContainer title={false}>
       <ProTable
         actionRef={actionRef}
         rowKey="name"
@@ -209,6 +209,6 @@ export default () => {
           values={stepFormValues}
         />
       ) : null}
-    </PageHeaderWrapper>
+    </PageContainer>
   );
 };

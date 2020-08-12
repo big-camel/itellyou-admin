@@ -1,12 +1,12 @@
 export default {
   navTheme: 'light',
   primaryColor: '#347EFF',
-  layout: 'sidemenu',
+  layout: 'side',
   contentWidth: 'Fluid',
   fixedHeader: false,
-  autoHideHeader: false,
-  fixSiderbar: false,
+  fixSiderbar: true,
   colorWeak: false,
+  siderWidth:256,
   menu: {
     locale: true,
   },

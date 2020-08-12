@@ -5,7 +5,7 @@
 import { extend } from 'umi-request';
 import { notification } from 'antd';
 import { history } from 'umi';
-import pathToRegexp from 'path-to-regexp';
+import { pathToRegexp } from 'path-to-regexp';
 
 const codeMessage = {
   200: '服务器成功返回请求的数据。',

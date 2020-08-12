@@ -5,7 +5,6 @@ import Submit from './Submit';
 import Tab from './Tab';
 import FormContext from './FormContext';
 import formItem from './FormItem';
-import styles from './index.less';
 
 const FormComponent = ({
     defaultActiveKey,
@@ -17,8 +16,6 @@ const FormComponent = ({
     ...props
 }) => {
     const [form] = Form.useForm(props.form);
-    const [tabs, setTabs] = useState([]);
-    const [active, setActive] = useState({});
     const [type, setType] = useState(defaultActiveKey);
 
     const TabChildren = [];
@@ -43,26 +40,9 @@ const FormComponent = ({
         <FormContext.Provider
             value={{
                 form,
-                tabUtil: {
-                    addTab: id => {
-                        setTabs([...tabs, id]);
-                    },
-                    removeTab: id => {
-                        setTabs(tabs.filter(currentId => currentId !== id));
-                    },
-                },
-                updateActive: activeItem => {
-                    if (!active) return;
-                    if (active[type]) {
-                        active[type].push(activeItem);
-                    } else {
-                        active[type] = [activeItem];
-                    }
-                    setActive(active);
-                },
             }}
         >
-            <div className={classNames(styles.formWarp, className)}>
+            <div className={classNames(className)}>
                 <Form
                     scrollToFirstError
                     form={form}
@@ -73,7 +53,7 @@ const FormComponent = ({
                     }}
                     {...props}
                 >
-                    {tabs.length ? (
+                    {TabChildren.length ? (
                         <React.Fragment>
                             <Tabs
                                 activeKey={type}
