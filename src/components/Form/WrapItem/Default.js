@@ -48,6 +48,8 @@ export default ({
         fieldErrors.current = errors;
         if (Array.isArray(errors) ? errors.length > 0 : errors) {
             form.validateFields([name]);
+        }else if(form.getFieldError(name).length > 0){
+            form.validateFields([name]);
         }
     }, [errors]);
 
