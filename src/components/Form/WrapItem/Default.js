@@ -236,7 +236,7 @@ export default ({
             hasFeedback={canFeedback ? hasFeedback() : false}
             extra={extra}
             rules={rules.current}
-            validateFirst={validateFirst || true}
+            validateFirst={validateFirst || "parallel"}
             validateTrigger={validateTrigger || 'onBlur'}
             dependencies={dependencies}
             noStyle={noStyle}
