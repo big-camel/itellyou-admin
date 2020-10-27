@@ -1,22 +1,15 @@
-import React, { useRef, useState } from 'react';
-import { Button, message, Space, Modal, Tooltip } from 'antd';
-import { useAccess } from 'umi';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import { PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
-import ProTable from '@ant-design/pro-table';
-import CreateForm from './components/CreateForm';
-import UpdateForm from './components/UpdateForm';
+import React from 'react';
+import { SettingOutlined } from '@ant-design/icons';
+import DatetimeRangePicker from "@/components/DatetimeRangePicker";
+import Form from '@/components/Form';
+import Table from '@/components/Table'
+import formMap from './components/map';
 import Setting from './components/Setting';
-import { list, add, remove, update } from './service';
+import { list, add, remove, update , queryName } from './service';
+
+const { Name, Description , Disabled } = Form.createItem(formMap);
 
 export default () => {
-  const actionRef = useRef();
-
-  const [createModalVisible, handleModalVisible] = useState(false);
-  const [updateModalVisible, handleUpdateModalVisible] = useState(false);
-  const [settingModalVisible, handleSettingModalVisible] = useState(false);
-  const [stepFormValues, setStepFormValues] = useState({});
-  const access = useAccess();
   const columns = [
     {
       title: '名称',
@@ -26,7 +19,7 @@ export default () => {
     {
       title: '备注',
       dataIndex: 'description',
-      hideInSearch: true,
+      search: false,
     },
     {
       title: '状态',
@@ -41,174 +34,73 @@ export default () => {
       title: '创建时间',
       formItemProps: { autoComplete: 'off' },
       dataIndex: 'created_time',
-      valueType: 'dateTimeRange',
-    },
-    {
-      title: '操作',
-      key: 'option',
-      valueType: 'option',
-      render: (_, record) => {
-        return (
-          <Space>
-            {access.adminSystemRoleRemove && (
-              <Tooltip title={record.system ? '系统角色，不能删除' : '删除角色'}>
-                <Button
-                  type="link"
-                  disabled={record.system}
-                  onClick={() => {
-                    Modal.confirm({
-                      title: '你确定要删除吗？',
-                      okText: '确定',
-                      cancelText: '取消',
-                      centered: true,
-                      onOk() {
-                        return new Promise(async (resolve) => {
-                          const { result, ...res } = await remove({ id: record.id });
-                          if (result) {
-                            message.success('删除成功');
-                            if (actionRef.current) {
-                              actionRef.current.reload();
-                            }
-                          } else {
-                            message.error(res.message);
-                          }
-                          resolve();
-                        });
-                      },
-                      onCancel() {},
-                    });
-                  }}
-                  icon={<DeleteOutlined />}
-                />
-              </Tooltip>
-            )}
-            {access.adminSystemRoleUpdate && (
-              <Tooltip title={record.system ? '系统角色，不能编辑' : '编辑'}>
-                <Button
-                  type="link"
-                  disabled={record.system}
-                  icon={<EditOutlined />}
-                  onClick={() => {
-                    handleUpdateModalVisible(true);
-                    setStepFormValues(record);
-                  }}
-                />
-              </Tooltip>
-            )}
-            {access.adminSystemRolePermission && (
-              <Tooltip title="设置权限">
-                <Button
-                  type="link"
-                  icon={<SettingOutlined />}
-                  onClick={() => {
-                    handleSettingModalVisible(true);
-                    setStepFormValues(record);
-                  }}
-                />
-              </Tooltip>
-            )}
-          </Space>
-        );
+      valueType: 'dateTime',
+      renderFormItem: (_, { type, defaultRender, ...rest }) => {
+        return <DatetimeRangePicker {...rest} />
       },
-    },
+    }
   ];
 
-  const tools = [];
-  if (access.adminSystemRoleAdd) {
-    tools.push(
-      <Button type="primary" onClick={() => handleModalVisible(true)}>
-        <PlusOutlined /> 添加角色
-      </Button>,
-    );
-  }
-
   return (
-    <PageHeaderWrapper title={false}>
-      <ProTable
-        actionRef={actionRef}
-        rowKey="id"
-        toolBarRender={() => tools}
-        tableAlertRender={false}
-        request={({ current, pageSize, created_time, ...params }) => {
-          return new Promise((resolve, reject) => {
-            const [begin, end] = created_time || [];
-
-            list({
-              offset: (current - 1) * pageSize,
-              limit: pageSize,
-              begin,
-              end,
-              ...params,
-            }).then(({ result, data }) => {
-              if (!result || !data) reject();
-              else {
-                const { total } = data;
-                resolve({
-                  current,
-                  pageSize,
-                  total,
-                  data: data.data,
+    <Table 
+    columns={columns}
+    request={list}
+    tool={{
+        add:{
+            text:"添加角色",
+            service:add,
+            access:"adminSystemRoleAdd"
+        }
+    }}
+    option={{
+        remove:{
+            title:({ system }) => system ? '系统角色，不能删除' : '删除角色',
+            disabled:({ system }) => !!system,
+            service:({id}) => remove({id}),
+            access:"adminSystemRoleRemove"
+        },
+        edit:{
+            title:({ system }) => system ? '系统角色，不能编辑' : '编辑角色',
+            disabled:({ system }) => !!system,
+            service:(updateValues) => update(updateValues),
+            access:"adminSystemRoleUpdate",
+        },
+        setting:{
+            title:"设置权限",
+            icon:<SettingOutlined />,
+            access:"adminSystemRolePermission",
+            content:({ id }) => <Setting id={id} />,
+            modalProps:({ name }) => ({ width:1000,footer:null,title : `${name} - 权限配置`})
+        }
+    }}
+    createForm={{
+        title:"创建角色",
+        items:[
+            <Name
+            name="name"
+            key="name"
+            asyncValidator={(_, value) => {
+                return new Promise((resolve, reject) => {
+                queryName({ name: value })
+                    .then(({ result }) => {
+                    if (result) resolve();
+                    else reject(new Error('名称已存在'));
+                    })
+                    .catch(() => reject(new Error('请求错误，请重试')));
                 });
-              }
-            });
-          });
-        }}
-        columns={columns}
-      />
-      <CreateForm
-        onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
-        form={{
-          hideRequiredMark: true,
-        }}
-        onSubmit={async (value) => {
-          const { result, ...res } = await add(value);
-          if (result) {
-            handleModalVisible(false);
-
-            if (actionRef.current) {
-              actionRef.current.reload();
-            }
-          } else {
-            message.error(res.message);
-          }
-        }}
-      />
-      {stepFormValues && Object.keys(stepFormValues).length ? (
-        <>
-          <UpdateForm
-            form={{
-              hideRequiredMark: true,
             }}
-            onSubmit={async (value) => {
-              const success = await update(value);
-
-              if (success) {
-                handleUpdateModalVisible(false);
-                setStepFormValues({});
-
-                if (actionRef.current) {
-                  actionRef.current.reload();
-                }
-              }
-            }}
-            onCancel={() => {
-              handleUpdateModalVisible(false);
-              setStepFormValues({});
-            }}
-            modalVisible={updateModalVisible}
-            values={stepFormValues}
-          />
-          <Setting
-            onCancel={() => {
-              handleSettingModalVisible(false);
-              setStepFormValues({});
-            }}
-            modalVisible={settingModalVisible}
-            values={stepFormValues}
-          />
-        </>
-      ) : null}
-    </PageHeaderWrapper>
-  );
+            />,
+            <Description key="description" name="description" />
+        ]
+    }}
+    updateForm={{
+        title:"编辑角色",
+        items:[
+            <Name key="name" name="name" />,
+            <Disabled key="disabled" name="disabled" />,
+            <Description key="description" name="description" />
+        ]
+    }}
+    />
+)
 };

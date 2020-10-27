@@ -1,15 +1,13 @@
-import React, { useRef, useState } from 'react';
-import { Modal, message } from 'antd';
+import React, { useState } from 'react';
+import { message } from 'antd';
 import { useAccess } from 'umi';
-import ProTable from '@ant-design/pro-table';
+import Table from '@/components/Table'
 import { roleList, removeRole, addRole } from '../service';
 
-export default ({ values, modalVisible, onCancel }) => {
+export default ({ id }) => {
   const access = useAccess();
 
-  const actionRef = useRef();
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const { id, name } = values;
 
   const columns = [
     {
@@ -31,60 +29,54 @@ export default ({ values, modalVisible, onCancel }) => {
     },
   ];
 
-  return (
-    <Modal
-      width={1000}
-      destroyOnClose
-      title={`${name} - 角色配置`}
-      visible={modalVisible}
-      onCancel={onCancel}
-      footer={null}
-    >
-      <ProTable
-        actionRef={actionRef}
-        rowKey="id"
-        search={false}
-        toolBarRender={false}
-        tableAlertRender={(record) => (
-          <div>
-            <p>
-              未登录用户默认拥有 guest 角色，已登录用户默认拥有 guest , user 角色和动态等级对应角色
-            </p>
-            已选择{' '}
-            <a
-              style={{
-                fontWeight: 600,
-              }}
-            >
-              {record.selectedRowKeys.length}
-            </a>{' '}
-            项，勾选即绑定角色
-          </div>
-        )}
-        request={() => {
-          return new Promise((resolve, reject) => {
-            roleList({
-              user_id: id,
-            }).then(({ result, data }) => {
-              if (!result || !data) reject();
-              else {
-                const keys = [];
-                const objs = [];
-                data.forEach(({ checked, role }) => {
-                  if (checked) keys.push(role.id);
-                  objs.push(role);
-                });
-                setSelectedRowKeys(keys);
-                resolve({
-                  data: objs,
-                });
-              }
-            });
-          });
-        }}
-        tableAlertOptionRender={false}
+  return <Table
+  headerWrapper={false}
+  columns={columns}
+  search={false}
+    toolBarRender={false}
+    tableAlertRender={(record) => (
+        <div>
+        <p>
+            未登录用户默认拥有 guest 角色，已登录用户默认拥有 guest , user 角色和动态等级对应角色
+        </p>
+        已选择{' '}
+        <a
+            style={{
+            fontWeight: 600,
+            }}
+        >
+            {record.selectedRowKeys.length}
+        </a>{' '}
+        项，勾选即绑定角色
+        </div>
+    )}
+    request={ params => {
+        return new Promise((resolve,reject) => {
+            roleList({user_id:id,...params}).then(res => {
+                const { result , data} = res
+                if (!result || !data) reject();
+                else {
+                    const keys = [];
+                    const objs = [];
+                    data.forEach(({ checked, role }) => {
+                    if (checked) keys.push(role.id);
+                        objs.push(role);
+                    });
+                    setSelectedRowKeys(keys);
+                    resolve({
+                        ...res,
+                        data: {
+                            ...res.data,
+                            data:objs
+                        }
+                    });
+                }
+            })
+        })
+    }
+    }
+    tableAlertOptionRender={false}
         scroll={{ y: 480 }}
-        columns={columns}
         rowSelection={{
           columnWidth: 80,
           columnTitle: '选择',
@@ -120,7 +112,5 @@ export default ({ values, modalVisible, onCancel }) => {
             setSelectedRowKeys(keys);
           },
         }}
-      />
-    </Modal>
-  );
+  />
 };

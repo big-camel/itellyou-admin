@@ -1,22 +1,20 @@
-import React, { useRef, useState } from 'react';
-import { Tooltip, Button, Space } from 'antd';
-import { useAccess } from 'umi';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import ProTable from '@ant-design/pro-table';
-import { EditOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import UpdateForm from './components/UpdateForm';
+import React from 'react';
+import { Tooltip, Space } from 'antd';
+import { QuestionCircleOutlined } from '@ant-design/icons';
+import Form from '@/components/Form';
+import Table from '@/components/Table'
+import formMap from './components/map';
 
-export default ({ type, list, update }) => {
-  const actionRef = useRef();
-  const [updateModalVisible, handleUpdateModalVisible] = useState(false);
-  const [stepFormValues, setStepFormValues] = useState({});
-  const access = useAccess();
+const { Action, Type, Number, Remark, OnlyOnce } = Form.createItem(formMap);
+
+export default ({ list, update }) => {
+
   const columns = [
     {
       title: '操作',
       dataIndex: 'action',
       formItemProps: { autoComplete: 'off' },
-      hideInSearch: true,
+      search:false,
       valueEnum: {
         follow: '关注/收藏',
         like: '点赞',
@@ -42,7 +40,7 @@ export default ({ type, list, update }) => {
       title: '类型',
       dataIndex: 'type',
       formItemProps: { autoComplete: 'off' },
-      hideInSearch: true,
+      search:false,
       valueEnum: {
         user: '用户',
         question: '问题',
@@ -101,7 +99,7 @@ export default ({ type, list, update }) => {
         </Tooltip>
       ),
       dataIndex: 'creater_min_score',
-      hideInSearch: true,
+      search:false,
       formItemProps: { autoComplete: 'off' },
     },
     {
@@ -249,12 +247,12 @@ export default ({ type, list, update }) => {
     {
       title: '目标说明',
       dataIndex: 'targeter_remark',
-      hideInSearch: true,
+      search:false,
       formItemProps: { autoComplete: 'off' },
     },
     {
       title: '操作说明',
-      hideInSearch: true,
+      search:false,
       dataIndex: 'creater_remark',
       formItemProps: { autoComplete: 'off' },
     },
@@ -268,92 +266,71 @@ export default ({ type, list, update }) => {
         </Tooltip>
       ),
       dataIndex: 'only_once',
-      hideInSearch: true,
+      search:false,
       valueEnum: {
         true: { text: '是', status: 'Processing' },
         false: { text: '否', status: 'Default' },
       },
-    },
-    {
-      title: '操作',
-      key: 'option',
-      valueType: 'option',
-      render: (_, record) => {
-        if (type === 'credit' && !access.adminUserBankCreditConfigUpdate) return null;
-        if (type === 'score' && !access.adminUserBankScoreConfigUpdate) return null;
-        return (
-          <Tooltip title="修改">
-            <Button
-              type="link"
-              icon={<EditOutlined />}
-              onClick={() => {
-                handleUpdateModalVisible(true);
-                setStepFormValues(record);
-              }}
-            />
-          </Tooltip>
-        );
-      },
-    },
+    }
   ];
 
-  const renderUpdateForm = () => {
-    if (stepFormValues && Object.keys(stepFormValues).length) {
-      return (
-        <UpdateForm
-          form={{
-            hideRequiredMark: true,
-          }}
-          onSubmit={async (value) => {
-            const success = await update(value);
-
-            if (success) {
-              handleUpdateModalVisible(false);
-              setStepFormValues({});
-
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            }
-          }}
-          onCancel={() => {
-            handleUpdateModalVisible(false);
-            setStepFormValues({});
-          }}
-          modalVisible={updateModalVisible}
-          values={stepFormValues}
-        />
-      );
-    }
-    return null;
-  };
-
   return (
-    <PageHeaderWrapper title={false}>
-      <ProTable
-        actionRef={actionRef}
-        rowKey={({ action, ...record }) => {
-          return `${action}_${record.type}`;
-        }}
-        pagination={{
-          pageSize: 100,
-        }}
-        toolBarRender={() => []}
-        tableAlertRender={false}
-        request={(params) =>
-          new Promise((resolve, reject) => {
-            list(params).then(({ result, data }) => {
-              if (!result || !data) reject();
-              else
+    <Table 
+    rowKey={({ action, ...record }) => {
+        return `${action}_${record.type}`;
+    }}
+    columns={columns}
+    request={params => {
+        return new Promise(resolve => {
+            list(params).then(res => {
                 resolve({
-                  data,
-                });
-            });
-          })
+                    ...res,
+                    data:{
+                        total:res.data.length,
+                        data:res.data
+                    }
+                })
+            })
+        })
+        
+    }}
+    pagination={{
+        pageSize: 100,
+    }}
+    search={false}
+    tableAlertRender={false}
+    option={{
+        edit:{
+            title:"修改",
+            service:(_,fieldsValue) => update(fieldsValue),
+            access:["adminUserBankCreditConfigUpdate","adminUserBankScoreConfigUpdate"],
         }
-        columns={columns}
-      />
-      {renderUpdateForm()}
-    </PageHeaderWrapper>
-  );
+    }}
+    updateForm={{
+        title:"修改配置",
+        items:[
+            <Action key="action" name="action" disabled />,
+            <Type key="type" name="type" disabled />,
+            <Number key="targeter_step" label="目标加分" name="targeter_step" />,
+            <Number key="creater_step" label="操作加分" name="creater_step" />,
+            <Number key="creater_min_score" label="最低有效分" name="creater_min_score" min={0} />,
+            <Number key="targeter_count_of_day" label="目标每日次数" name="targeter_count_of_day" min={0} />,
+            <Number key="targeter_total_of_day" label="目标每日额度" name="targeter_total_of_day" min={0} />,
+            <Number key="targeter_count_of_week" label="目标每周次数" name="targeter_count_of_week" min={0} />,
+            <Number key="targeter_total_of_week" label="目标每周额度" name="targeter_total_of_week" min={0} />,
+            <Number key="targeter_count_of_month" label="目标每月次数" name="targeter_count_of_month" min={0} />,
+            <Number key="targeter_total_of_month" label="目标每月额度" name="targeter_total_of_month" min={0} />,
+            <Number key="creater_count_of_day" label="操作每日次数" name="creater_count_of_day" />,
+            <Number key="creater_total_of_day" label="操作每日额度" name="creater_total_of_day" min={0} />,
+            <Number key="creater_count_of_week" label="操作每周次数" name="creater_count_of_week" min={0} />,
+            <Number key="creater_total_of_week" label="操作每周额度" name="creater_total_of_week" min={0} />,
+            <Number key="creater_count_of_month" label="操作每月次数" name="creater_count_of_month" min={0} />,
+            <Number key="creater_total_of_month" label="操作每月额度" name="creater_total_of_month" min={0} />,
+            <Remark key="targeter_remark" label="目标备注" name="targeter_remark" />,
+            <Remark key="creater_remark" label="操作备注" name="creater_remark" />,
+            <OnlyOnce key="only_once" label="仅一次有效" name="only_once" />
+        ]
+    }}
+    />
+  )
 };

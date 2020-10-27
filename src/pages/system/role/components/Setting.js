@@ -1,37 +1,41 @@
-import React, { useRef, useState } from 'react';
-import { Modal, message } from 'antd';
+import React, { useState } from 'react';
+import { message } from 'antd';
 import { useAccess } from 'umi';
-import ProTable from '@ant-design/pro-table';
+import Table from '@/components/Table'
 import { permissionList, removePermission, addPermission } from '../service';
 
-export default ({ values, modalVisible, onCancel }) => {
+export default ({ id }) => {
   const access = useAccess();
-
-  const actionRef = useRef();
+    
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const { id, name } = values;
 
   const columns = [
     {
       title: '名称',
+      key:"name",
       dataIndex: 'name',
       width: 120,
+      sorter:true
     },
     {
       title: '平台',
       dataIndex: 'platform',
+      initialValue: 'all',
       width: 80,
       valueEnum: {
+          all:"全部",
         web: 'web',
         api: 'api',
         admin: 'admin',
-      },
+      }
     },
     {
       title: '类型',
       dataIndex: 'type',
+      initialValue: 'all',
       width: 80,
       valueEnum: {
+        all:"全部",
         negotiated: '常量',
         url: '链接',
         button: '按钮',
@@ -41,7 +45,9 @@ export default ({ values, modalVisible, onCancel }) => {
       title: '方式',
       width: 80,
       dataIndex: 'method',
+      initialValue: 'all',
       valueEnum: {
+        all:"全部",
         negotiated: '常量',
         get: 'GET 请求',
         post: 'POST 请求',
@@ -58,61 +64,45 @@ export default ({ values, modalVisible, onCancel }) => {
     {
       title: '备注',
       dataIndex: 'remark',
+      search:false
     },
   ];
 
-  return (
-    <Modal
-      width={1000}
-      destroyOnClose
-      title={`${name} - 权限配置`}
-      visible={modalVisible}
-      onCancel={onCancel}
-      footer={null}
-    >
-      <ProTable
-        actionRef={actionRef}
-        rowKey="name"
-        search={false}
-        toolBarRender={false}
-        tableAlertRender={(data) => (
-          <div>
-            已选择{' '}
-            <a
-              style={{
-                fontWeight: 600,
-              }}
-            >
-              {data.selectedRowKeys.length}
-            </a>{' '}
-            项，勾选即绑定权限
-          </div>
-        )}
-        request={() => {
-          return new Promise((resolve, reject) => {
-            permissionList({
-              role_id: id,
-            }).then(({ result, data }) => {
-              if (!result || !data) reject();
-              else {
-                const keys = [];
-                const objs = [];
-                data.forEach(({ checked, permission }) => {
-                  if (checked) keys.push(permission.name);
-                  objs.push(permission);
-                });
-                setSelectedRowKeys(keys);
-                resolve({
-                  data: objs,
-                });
-              }
-            });
-          });
-        }}
-        tableAlertOptionRender={false}
-        scroll={{ y: 480 }}
-        columns={columns}
-        rowSelection={{
+  return <Table
+  headerWrapper={false}
+  primaryKey="name"
+  columns={columns}
+  toolBarRender={false}
+    tableAlertRender={(data) => (
+        <div>
+        已选择{' '}
+        <a
+            style={{
+            fontWeight: 600,
+            }}
+        >
+            {data.selectedRowKeys.length}
+        </a>{' '}
+        项，勾选即绑定权限
+        </div>
+    )}
+    request={ params => {
+            return new Promise((resolve,reject) => {
+                permissionList({role_id:id,...params}).then(res => {
+                    const { result , data} = res
+                    if (!result || !data) reject();
+                    else {
+                        const { checked_keys } = data;
+                        setSelectedRowKeys(checked_keys);
+                        resolve(res)
+                    }
+                })
+            })
+        }
+    }
+    tableAlertOptionRender={false}
+    scroll={{ y: 480 }}
+    rowSelection={{
           columnWidth: 80,
           columnTitle: '选择',
           selectedRowKeys,
@@ -126,8 +116,8 @@ export default ({ values, modalVisible, onCancel }) => {
                 permission_name: record.name,
               });
               if (result) {
-                const index = keys.findIndex((key) => key === record.name);
-                if (index > -1) keys.splice(index, 1);
+                    const index = keys.findIndex((key) => key === record.name);
+                    if (index > -1) keys.splice(index, 1);
               } else {
                 message.error(res.message);
               }
@@ -140,12 +130,12 @@ export default ({ values, modalVisible, onCancel }) => {
               });
               if (!result) {
                 message.error(res.message);
-              } else keys.push(record.name);
+              } else {
+                  keys.push(record.name)
+                };
             }
             setSelectedRowKeys(keys);
           },
         }}
-      />
-    </Modal>
-  );
+  />
 };

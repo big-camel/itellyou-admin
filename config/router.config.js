@@ -18,13 +18,13 @@ export default [
     routes: [
       {
         path: '/',
-        redirect: '/welcome',
+        redirect: '/home',
       },
       {
-        path: '/welcome',
-        name: 'welcome',
+        path: '/home',
+        name: 'home',
         icon: 'smile',
-        component: './Welcome',
+        component: './home',
       },
       {
         name: 'user.manager',
@@ -75,6 +75,34 @@ export default [
         ],
       },
       {
+        name: 'finance.manager',
+        icon: 'account-book',
+        path: '/finance',
+        routes: [
+          {
+            path: 'income',
+            name: 'income',
+            routes:[
+                {
+                    path: 'list',
+                    name: 'list',
+                    component: './finance/income',
+                },
+                {
+                    path: 'config',
+                    name: 'config',
+                    component: './finance/income/config',
+                },
+                {
+                  path: 'tip/config',
+                  name: 'tip.config',
+                  component: './finance/income/tip/config',
+                }
+            ]
+          }
+        ],
+      },
+      {
         name: 'system',
         icon: 'robot',
         path: '/system',
@@ -101,6 +129,22 @@ export default [
             path: 'link',
             name: 'link',
             component: './system/link',
+          },
+          {
+            path: 'ad',
+            name: 'ad',
+            routes:[
+                {
+                    path: 'list',
+                    name: 'list',
+                    component: './system/ad',
+                },
+                {
+                    path: 'slot',
+                    name: 'slot',
+                    component: './system/ad/slot',
+                }
+            ]
           },
         ],
       },

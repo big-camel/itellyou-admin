@@ -1,22 +1,20 @@
-import React, { useRef, useState } from 'react';
-import { Button, Tooltip, message, Space, Modal } from 'antd';
-import { useAccess } from 'umi';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import { PlusOutlined, DeleteOutlined, EditOutlined, SettingOutlined } from '@ant-design/icons';
-import ProTable from '@ant-design/pro-table';
-import Form from './components/Form';
+import React, { useRef } from 'react';
+import { SettingOutlined } from '@ant-design/icons';
+import DatetimeRangePicker from "@/components/DatetimeRangePicker";
+import Form from '@/components/Form';
+import Table from '@/components/Table'
+import formMap from './components/map';
 import Setting from './components/Setting';
-import { list, add, remove, update } from './service';
+import { list, add, remove, update , queryName} from './service';
 
+const { Name, Score } = Form.createItem(formMap);
+
+const items = [
+    <Score key="min_score" label="最小分数" name="min_score" />,
+    <Score key="max_score" label="最大分数" name="max_score" />
+]
 export default () => {
-  const actionRef = useRef();
-
-  const [createModalVisible, handleModalVisible] = useState(false);
-  const [updateModalVisible, handleUpdateModalVisible] = useState(false);
-  const [settingModalVisible, handleSettingModalVisible] = useState(false);
-  const [stepFormValues, setStepFormValues] = useState({});
-
-  const access = useAccess();
+  const rowValue = useRef({})
 
   const columns = [
     {
@@ -40,164 +38,81 @@ export default () => {
       title: '创建时间',
       formItemProps: { autoComplete: 'off' },
       dataIndex: 'created_time',
-      valueType: 'dateTimeRange',
-    },
-    {
-      title: '操作',
-      key: 'option',
-      valueType: 'option',
-      render: (_, record) => {
-        return (
-          <Space>
-            {access.adminUserRankRemove && (
-              <Tooltip title="删除等级">
-                <Button
-                  type="link"
-                  onClick={() => {
-                    Modal.confirm({
-                      title: '你确定要删除吗？',
-                      okText: '确定',
-                      cancelText: '取消',
-                      centered: true,
-                      onOk() {
-                        return new Promise(async (resolve) => {
-                          const { result, ...res } = await remove({ id: record.id });
-                          if (result) {
-                            message.success('删除成功');
-                            if (actionRef.current) {
-                              actionRef.current.reload();
-                            }
-                          } else {
-                            message.error(res.message);
-                          }
-                          resolve();
-                        });
-                      },
-                      onCancel() {},
-                    });
-                  }}
-                  icon={<DeleteOutlined />}
-                />
-              </Tooltip>
-            )}
-            {access.adminUserRankUpdate && (
-              <Tooltip title="修改等级">
-                <Button
-                  type="link"
-                  icon={<EditOutlined />}
-                  onClick={() => {
-                    handleUpdateModalVisible(true);
-                    setStepFormValues(record);
-                  }}
-                />
-              </Tooltip>
-            )}
-            {access.adminUserRankRoleList && (
-              <Tooltip title="管理角色">
-                <Button
-                  type="link"
-                  icon={<SettingOutlined />}
-                  onClick={() => {
-                    handleSettingModalVisible(true);
-                    setStepFormValues(record);
-                  }}
-                />
-              </Tooltip>
-            )}
-          </Space>
-        );
+      valueType: 'dateTime',
+      renderFormItem: (_, { type, defaultRender, ...rest }) => {
+        return <DatetimeRangePicker {...rest} />
       },
-    },
+    }
   ];
 
   return (
-    <PageHeaderWrapper title={false}>
-      <ProTable
-        actionRef={actionRef}
-        rowKey="id"
-        toolBarRender={() => [
-          <Button type="primary" onClick={() => handleModalVisible(true)}>
-            <PlusOutlined /> 添加等级
-          </Button>,
-        ]}
-        tableAlertRender={false}
-        request={({ current, pageSize, created_time, ...params }) => {
-          return new Promise((resolve, reject) => {
-            const [begin, end] = created_time || [];
-
-            list({
-              offset: (current - 1) * pageSize,
-              limit: pageSize,
-              begin,
-              end,
-              ...params,
-            }).then(({ result, data }) => {
-              if (!result || !data) reject();
-              else {
-                const { total } = data;
-                resolve({
-                  current,
-                  pageSize,
-                  total,
-                  data: data.data,
-                });
-              }
-            });
-          });
-        }}
-        columns={columns}
-      />
-      <Form
-        onCancel={() => handleModalVisible(false)}
-        modalVisible={createModalVisible}
-        form={{
-          hideRequiredMark: true,
-        }}
-        onSubmit={async (value) => {
-          const { result, ...res } = await add(value);
-          if (result) {
-            handleModalVisible(false);
-
-            if (actionRef.current) {
-              actionRef.current.reload();
+    <Table 
+    columns={columns}
+    request={list}
+    tool={{
+        add:{
+            text:"添加等级",
+            service:add,
+            access:"adminUserRankAdd"
+        }
+    }}
+    option={{
+        remove:{
+            title:"删除等级",
+            service:({id}) => remove({id}),
+            access:"adminUserRankRemove"
+        },
+        edit:{
+            title:"修改等级",
+            service:update,
+            access:"adminUserRankUpdate",
+            onClick:record => {
+                rowValue.current = record
             }
-          } else {
-            message.error(res.message);
-          }
-        }}
-      />
-      {stepFormValues && Object.keys(stepFormValues).length ? (
-        <>
-          <Form
-            onSubmit={async (value) => {
-              const success = await update(value);
-
-              if (success) {
-                handleUpdateModalVisible(false);
-                setStepFormValues({});
-
-                if (actionRef.current) {
-                  actionRef.current.reload();
-                }
-              }
+        },
+        setting:{
+            title:"管理角色",
+            icon:<SettingOutlined />,
+            access:"adminUserRankRoleList",
+            content:({ id }) => <Setting id={id} />,
+            modalProps:({ name }) => ({ width:1000,footer:null,title : `${name} - 角色配置`})
+        }
+    }}
+    createForm={{
+        title:"创建等级",
+        items:[
+            <Name
+            key="name"
+            name="name"
+            asyncValidator={(_, value) => {
+            return new Promise((resolve, reject) => {
+                queryName({ name: value })
+                .then(({ result }) => {
+                    if (result) resolve();
+                    else reject(new Error('名称已存在'));
+                })
+                .catch(() => reject(new Error('请求错误，请重试')));
+            });
             }}
-            onCancel={() => {
-              handleUpdateModalVisible(false);
-              setStepFormValues({});
-            }}
-            modalVisible={updateModalVisible}
-            values={stepFormValues}
-          />
-          <Setting
-            onCancel={() => {
-              handleSettingModalVisible(false);
-              setStepFormValues({});
-            }}
-            modalVisible={settingModalVisible}
-            values={stepFormValues}
-          />
-        </>
-      ) : null}
-    </PageHeaderWrapper>
-  );
+            />].concat(items)
+    }}
+    updateForm={{
+        title:"编辑等级",
+        items:[
+            <Name key="name" name="name" 
+            asyncValidator={(_, value) => {
+            if (value === rowValue.current.name) return Promise.resolve();
+            return new Promise((resolve, reject) => {
+              queryName({ name: value })
+                .then(({ result }) => {
+                  if (result) resolve();
+                  else reject(new Error('名称已存在'));
+                })
+                .catch(() => reject(new Error('请求错误，请重试')));
+            });
+          }}
+            />].concat(items)
+    }}
+    />
+)
 };

@@ -1,19 +1,15 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Tooltip, Button, message, Space } from 'antd';
-import { useAccess } from 'umi';
-import { SettingOutlined } from '@ant-design/icons';
-import { PageHeaderWrapper } from '@ant-design/pro-layout';
-import ProTable from '@ant-design/pro-table';
+import React, { useState, useEffect } from 'react';
+import { Select } from 'antd';
 import { list as groupList } from '@/services/tag/group';
-import Form from './components/Form';
-import { list, edit } from './service';
+import DatetimeRangePicker from "@/components/DatetimeRangePicker";
+import Form from '@/components/Form';
+import Table from '@/components/Table'
+import formMap from './components/map';
+import { list, edit , query } from './service';
+
+const { Name, Disabled, Group } = Form.createItem(formMap);
 
 export default () => {
-  const actionRef = useRef();
-  const [settingModalVisible, handleSettingModalVisible] = useState(false);
-  const [stepFormValues, setStepFormValues] = useState();
-
-  const access = useAccess();
   const [groupData, setGroupData] = useState([]);
 
   useEffect(() => {
@@ -52,6 +48,7 @@ export default () => {
       dataIndex: 'disabled',
       formItemProps: { allowClear: true },
       valueEnum: {
+          all:"全部",
         true: { text: '禁用', status: 'Default' },
         false: { text: '正常', status: 'Processing' },
       },
@@ -78,92 +75,49 @@ export default () => {
       title: '创建时间',
       formItemProps: { autoComplete: 'off' },
       dataIndex: 'created_time',
-      valueType: 'dateTimeRange',
-    },
-    {
-      title: '操作',
-      key: 'option',
-      valueType: 'option',
-      render: (_, record) => {
-        return (
-          <Space>
-            {access.adminTagEdit && (
-              <Space>
-                <Tooltip title="编辑">
-                  <Button
-                    type="link"
-                    icon={<SettingOutlined />}
-                    onClick={() => {
-                      handleSettingModalVisible(true);
-                      setStepFormValues(record);
-                    }}
-                  />
-                </Tooltip>
-              </Space>
-            )}
-          </Space>
-        );
+      valueType: 'dateTime',
+      renderFormItem: (_, { type, defaultRender, ...rest }) => {
+        return <DatetimeRangePicker {...rest} />
       },
-    },
+    }
   ];
+
   return (
-    <PageHeaderWrapper title={false}>
-      <ProTable
-        actionRef={actionRef}
-        rowKey="id"
-        toolBarRender={() => []}
-        tableAlertRender={false}
-        request={({ current, pageSize, created_time, ...params }) => {
-          return new Promise((resolve, reject) => {
-            const [begin, end] = created_time || [];
-
-            list({
-              disabled: 'all',
-              offset: (current - 1) * pageSize,
-              limit: pageSize,
-              begin,
-              end,
-              ...params,
-            }).then(({ result, data }) => {
-              if (!result || !data) reject();
-              else {
-                const { total } = data;
-                resolve({
-                  current,
-                  pageSize,
-                  total,
-                  data: data.data,
-                });
-              }
-            });
-          });
-        }}
-        columns={columns}
-      />
-      {stepFormValues ? (
-        <Form
-          onSubmit={async (value) => {
-            const res = await edit(value);
-
-            if (res && res.result) {
-              handleSettingModalVisible(false);
-              setStepFormValues();
-
-              if (actionRef.current) {
-                actionRef.current.reload();
-              }
-            } else {
-              message.error(res.message);
-            }
-          }}
-          onCancel={() => {
-            handleSettingModalVisible(false);
-            setStepFormValues();
-          }}
-          modalVisible={settingModalVisible}
-          values={stepFormValues}
-        />
-      ) : null}
-    </PageHeaderWrapper>
-  );
+    <Table 
+    columns={columns}
+    request={list}
+    option={{
+        edit:{
+            service:edit,
+            initialValues:({ group , ...values}) => { 
+                return {group_id:group ? group.id : 0,...values}
+            },
+            access:"adminTagEdit",
+        }
+    }}
+    updateForm={{
+        title:"编辑标签",
+        items:[
+  <Name key="name" name="name" asyncValidator={(_, value) => {
+    return new Promise((resolve, reject) => {
+      query({ name: value })
+        .then(({ result }) => {
+          if (!result) resolve();
+          else reject(new Error('名称已存在'));
+        })
+        .catch(() => reject(new Error('请求错误，请重试')));
+    });
+  }}/>,
+  <Disabled key="disabled" name="disabled" />,
+  <Group key="group_id" name="group_id">
+  <Select.Option value={0}>未选择</Select.Option>
+  {groupData.map((item) => (
+    <Select.Option key={item.id} value={item.id}>
+      {item.name}
+    </Select.Option>
+  ))}
+</Group>]
+    }}
+    />
+)
 };

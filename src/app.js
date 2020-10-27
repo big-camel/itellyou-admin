@@ -1,3 +1,6 @@
+import React from 'react'
+import { ConfigProvider } from 'antd'
+import locale from 'antd/es/locale/zh_CN';
 import { fetchMe } from '@/services/user';
 
 export async function getInitialState() {
@@ -10,3 +13,8 @@ export async function getInitialState() {
     me,
   };
 }
+
+export const rootContainer = (container) => {
+    return <ConfigProvider locale={locale} autoInsertSpaceInButton={false}>{container}</ConfigProvider>;
+};
+
