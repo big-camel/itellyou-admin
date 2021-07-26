@@ -18,7 +18,7 @@ const defaultFooterDom = (
       {
         key: 'itellyou',
         title: <img height={24} src={logoFull} alt="四川西维尔科技有限公司" />,
-        href: 'https://www.itellyou.com',
+        href: 'https://www.yanmao.cc',
         blankTarget: true,
       },
     ]}
