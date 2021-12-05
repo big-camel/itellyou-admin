@@ -25,7 +25,7 @@ const GlobalHeaderRight = () => {
       <Tooltip title="ITELLYOU">
         <a
           target="_blank"
-          href="https://www.yanmao.cc"
+          href="https://www.aomao.com"
           rel="noopener noreferrer"
           className={styles.action}
         >

@@ -20,7 +20,7 @@ export default () => {
               <a
                 target="_blank"
                 rel="noopener noreferrer"
-                href={`https://www.yanmao.cc/${path}`}
+                href={`https://www.aomao.com/${path}`}
               >
                 {text}
               </a>

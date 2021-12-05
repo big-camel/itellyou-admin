@@ -54,7 +54,7 @@ const UserLayout = (props) => {
             {
               key: 'itellyou',
               title: <img height={24} src={logoFull} alt="ITELLYOU" />,
-              href: 'https://www.yanmao.cc',
+              href: 'https://www.aomao.com',
               blankTarget: true,
             },
           ]}
